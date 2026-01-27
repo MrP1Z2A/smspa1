@@ -1,0 +1,8 @@
+{
+  "name": "EduParent Pro - Parent LMS Portal",
+  "description": "A comprehensive Learning Management System for parents to monitor student progress, handle payments, and stay connected with the institution.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
