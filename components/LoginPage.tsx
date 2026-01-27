@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { UserRole } from '../types.ts';
+import { UserRole } from '../types';
 
 interface LoginProps {
   onLogin: (role: UserRole, email: string) => void;
@@ -16,7 +16,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (glowRef.current) {
-        glowRef.current.style.setProperty('--x', `${e.clientX}px`);
+        glowRef.current.style.setProperty('--x', `${e.clientX}px`)
         glowRef.current.style.setProperty('--y', `${e.clientY}px`);
       }
     };
@@ -26,7 +26,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleSignIn = () => {
     setError('');
-    if (username === 'parent@gmail.com' && password === 'EDU-2026-001') {
+    if (username === 'parent@gmail.com' && password === '12345') {
       window.location.href = 'https://smspa1.vercel.app';
     } else if (username === 'user1' && password === '123456') {
       onLogin(UserRole.STUDENT, 'alex@edu.com');
