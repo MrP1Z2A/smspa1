@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { MOCK_STUDENT, MOCK_GRADES, MOCK_EVENTS, MOCK_PAYMENTS } from '../constants';
 import { getAcademicInsights } from '../services/geminiService';
+import { syncSmsData, SyncedSmsData } from '../services/smsService';
 import { 
   BarChart, 
   Bar, 
@@ -12,19 +13,33 @@ import {
   ResponsiveContainer, 
   Cell 
 } from 'recharts';
-import { Sparkles, Calendar, TrendingUp, AlertCircle, CheckCircle2, CreditCard } from 'lucide-react';
+import { Sparkles, Calendar, TrendingUp, RefreshCw, CheckCircle2, CreditCard, Activity } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const [insight, setInsight] = useState<string>("Analyzing recent performance...");
-  const [loading, setLoading] = useState(true);
+  const [smsData, setSmsData] = useState<SyncedSmsData | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [loadingInsight, setLoadingInsight] = useState(true);
+
+  const fetchAllData = async () => {
+    setSyncing(true);
+    try {
+      const [aiText, syncedData] = await Promise.all([
+        getAcademicInsights(MOCK_GRADES, MOCK_STUDENT.name),
+        syncSmsData(MOCK_STUDENT.id)
+      ]);
+      setInsight(aiText);
+      setSmsData(syncedData);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSyncing(false);
+      setLoadingInsight(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchInsight = async () => {
-      const text = await getAcademicInsights(MOCK_GRADES, MOCK_STUDENT.name);
-      setInsight(text);
-      setLoading(false);
-    };
-    fetchInsight();
+    fetchAllData();
   }, []);
 
   const COLORS = ['#4ea59d', '#5fbdb3', '#70d5ca', '#81ece1', '#92f9f8'];
@@ -34,15 +49,55 @@ const Dashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Welcome back, Sarah</h1>
-          <p className="text-slate-500">Here's an overview of {MOCK_STUDENT.name}'s current progress.</p>
-        </div>
-        <div className="bg-brand-light border border-brand/10 p-3 rounded-lg flex items-center space-x-3">
-          <div className="w-10 h-10 bg-brand rounded-full flex items-center justify-center text-white font-bold">
-            {MOCK_STUDENT.attendance}%
+          <div className="flex items-center gap-2 text-slate-500 text-sm mt-1">
+            <p>Monitoring progress for {MOCK_STUDENT.name}</p>
+            {smsData && (
+              <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full text-[10px] font-bold border border-emerald-100">
+                <span className={`w-1.5 h-1.5 bg-emerald-500 rounded-full ${syncing ? 'animate-pulse' : ''}`}></span>
+                Last Sync: {smsData.lastSync}
+              </span>
+            )}
           </div>
-          <div>
-            <p className="text-xs font-medium text-brand-dark">Attendance Rate</p>
-            <p className="text-xs text-brand/80">Term 2 - High Active</p>
+        </div>
+        
+        <button 
+          onClick={fetchAllData}
+          disabled={syncing}
+          className="bg-white border border-slate-200 p-2.5 rounded-xl text-slate-600 hover:text-brand transition-all shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95 disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin text-brand' : ''}`} />
+          {syncing ? 'Syncing...' : 'Refresh Portal'}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Quick Stats */}
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Current GPA</p>
+          <p className="text-2xl font-black text-slate-900">{smsData?.reportCard.gpa || '3.85'}</p>
+          <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 mt-2">
+            <TrendingUp className="w-3 h-3" /> +0.2 from last term
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Attendance</p>
+          <p className="text-2xl font-black text-slate-900">{MOCK_STUDENT.attendance}%</p>
+          <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 mt-2">
+            <CheckCircle2 className="w-3 h-3" /> Excellent standing
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pending Tasks</p>
+          <p className="text-2xl font-black text-slate-900">{smsData?.assignments.filter(a => a.status === 'Pending').length || 0}</p>
+          <div className="flex items-center gap-1 text-[10px] font-bold text-amber-500 mt-2">
+            <Activity className="w-3 h-3" /> 2 due this week
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Class Rank</p>
+          <p className="text-2xl font-black text-slate-900">{smsData?.reportCard.rank || '5 / 120'}</p>
+          <div className="flex items-center gap-1 text-[10px] font-bold text-brand mt-2">
+            Top 5% of Grade
           </div>
         </div>
       </div>
@@ -55,7 +110,7 @@ const Dashboard: React.FC = () => {
               <TrendingUp className="w-5 h-5 text-brand" />
               Academic Performance
             </h3>
-            <span className="text-xs font-medium bg-slate-100 text-slate-600 px-2 py-1 rounded">Current Semester</span>
+            <span className="text-xs font-medium bg-slate-100 text-slate-600 px-2 py-1 rounded">Semester 2 Breakdown</span>
           </div>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -81,10 +136,10 @@ const Dashboard: React.FC = () => {
         <div className="bg-gradient-to-br from-[#3e847e] to-[#4ea59d] p-6 rounded-xl shadow-lg text-white">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="w-6 h-6 text-brand-light" />
-            <h3 className="font-bold text-lg">AI Academic Advisor</h3>
+            <h3 className="font-bold text-lg">AI Performance Insight</h3>
           </div>
           <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 min-h-[160px]">
-            {loading ? (
+            {loadingInsight ? (
               <div className="animate-pulse space-y-3">
                 <div className="h-4 bg-white/20 rounded w-3/4"></div>
                 <div className="h-4 bg-white/20 rounded"></div>
@@ -97,31 +152,25 @@ const Dashboard: React.FC = () => {
             )}
           </div>
           <button className="mt-4 w-full py-2 bg-white text-brand-dark font-semibold rounded-lg text-sm hover:bg-brand-light transition-colors">
-            Generate Detailed Report
+            Detailed Sync Report
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Upcoming Events */}
+        {/* Synced Announcements */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
           <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-brand" />
-            Upcoming Notices
+            Live Announcements
           </h3>
           <div className="space-y-4">
-            {MOCK_EVENTS.slice(0, 3).map(event => (
-              <div key={event.id} className="flex items-start space-x-4 p-3 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer text-brand-dark">
-                <div className="bg-brand-light text-brand px-3 py-1 rounded text-center shrink-0 border border-brand/10">
-                  <span className="block text-xs font-bold uppercase">{new Date(event.date).toLocaleString('default', { month: 'short' })}</span>
-                  <span className="block text-lg font-bold">{new Date(event.date).getDate()}</span>
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-800">{event.title}</h4>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-1">{event.description}</p>
-                </div>
+            {(smsData?.announcements || []).map((note, idx) => (
+              <div key={idx} className="flex items-start gap-4 p-3 bg-slate-50 rounded-lg border-l-4 border-brand">
+                <p className="text-xs text-slate-700 font-medium">{note}</p>
               </div>
             ))}
+            {!smsData && <div className="animate-pulse h-20 bg-slate-50 rounded-lg"></div>}
           </div>
         </div>
 

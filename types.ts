@@ -21,6 +21,21 @@ export interface GradeResult {
   average: number;
 }
 
+export interface SubjectGrade {
+  name: string;
+  grade: string;
+  score: number;
+  comment: string;
+}
+
+export interface ReportCard {
+  term: string;
+  gpa: string;
+  rank: string;
+  attendance: string;
+  subjects: SubjectGrade[];
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -42,4 +57,11 @@ export interface PaymentRecord {
   amount: number;
   date: string;
   status: 'Paid' | 'Pending' | 'Overdue';
+}
+
+export interface Assignment {
+  id: string;
+  title: string;
+  dueDate: string;
+  status: 'Pending' | 'Submitted' | 'Graded';
 }

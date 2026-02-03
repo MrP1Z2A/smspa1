@@ -1,5 +1,5 @@
 
-import { Student, Achievement, GradeResult, Event, Advertisement, PaymentRecord } from './types';
+import { Student, Achievement, GradeResult, Event, Advertisement, PaymentRecord, Assignment } from './types';
 
 export const MOCK_STUDENT: Student = {
   id: "STD-2024-089",
@@ -27,6 +27,22 @@ export const MOCK_EVENTS: Event[] = [
   { id: "e1", title: "Parent-Teacher Meeting", date: "2024-06-15", description: "Mandatory meeting regarding finals.", type: "Meeting" },
   { id: "e2", title: "Summer Break Starts", date: "2024-07-01", description: "Official start of summer vacations.", type: "Holiday" },
   { id: "e3", title: "Final Examinations", date: "2024-06-20", description: "Semester 2 finals begin.", type: "Exam" },
+];
+
+export const ANNOUNCEMENTS: string[] = [
+  "End of Semester exams scheduled for next Monday.",
+  "School will remain closed on Friday for Teacher's Day.",
+  "Library books must be returned by June 15th."
+];
+
+export const UPCOMING_EXAMS: Event[] = [
+  { id: "ex1", title: "Advanced Physics", date: "2025-05-10", description: "Covering Chapters 1-12", type: "Exam" },
+  { id: "ex2", title: "World History", date: "2025-05-12", description: "Covering Industrial Revolution", type: "Exam" }
+];
+
+export const MOCK_ASSIGNMENTS: Assignment[] = [
+  { id: "as1", title: "Calculus Problem Set", dueDate: "2025-05-01", status: "Submitted" },
+  { id: "as2", title: "Biology Lab Report", dueDate: "2025-05-05", status: "Pending" }
 ];
 
 export const MOCK_ADS: Advertisement[] = [
